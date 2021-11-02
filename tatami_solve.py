@@ -30,15 +30,15 @@ def tatami_solve(xmax: int, ymax: int):# -> list[facile.Solution]:
     for i in range(n):
         for j in range(i+1, n):
             facile.constraint(
-                    ((auxs[i,0] != auxs[j,0]) | (variables[i,1] != variables[j,1])) &
-                    ((auxs[i,0] != auxs[j,0]) | (auxs[i,1] != auxs[j,1])) &
-                    ((variables[i,0] != variables[j,0]) | (auxs[i,1] != auxs[j,1])) &
-                    ((variables[i,0] != variables[j,0]) | (variables[i,1] != variables[j,1]))
+                    (auxs[j,0] <= variables[i,0]) |
+                    (variables[j,0] >= auxs[i,0]) |
+                    (auxs[j,1] >= variables[i,1]) |
+                    (variables[j,1] <= auxs[i,1])
                     )
 
     # 5.
-    for i in range(n-1):
-        facile.constraint((variables[i,0] < variables[i+1,0]) | (variables[i,1] < variables[i+1,1]))
+#    for i in range(n-1):
+#        facile.constraint((variables[i,0] < variables[i+1,0]) | (variables[i,1] < variables[i+1,1]))
 
     return facile.solve_all(variables, backtrack=True)
 
@@ -50,23 +50,20 @@ def grid(sol, xmax, ymax):
     for i in range(xmax):
         for j in range(ymax):
             grid_[i,j] = '.'
-    print(len(sol) / 4)
 
     for i in range(n):
-        #print(i, end=", ")
         x, y, sx, sy = sol[4*i:4*(i+1)]
-        #print(i, x, y, sx, sy)
+        print(x, y, sx, sy, end=" - ")
         if sx == 1:
-            grid_[y-1,x] = str(i)
-            grid_[y-2,x] = str(i)
+            grid_[y-1,x] = chr(i+97)
+            grid_[y-2,x] = chr(i+97)
         else:
-            grid_[y-1,x] = str(i)
-            grid_[y-1,x+1] = str(i)
-#        print('\n'.join([' '.join(line) for line in grid_]))
-#        print("**")
-#    print()
+            grid_[y-1,x] = chr(i+97)
+            grid_[y-1,x+1] = chr(i+97)
+    print()
 
-    print('\n'.join([' '.join(line) for line in grid_]))
+    msg = '\n'.join([' '.join(line) for line in grid_])
+    print(msg)
     print('-'*2*xmax)
 
 
@@ -79,6 +76,6 @@ if __name__ == "__main__":
 
     sols = tatami_solve(xmax, ymax)
     for sol in sols:
-        print(sol.solution)
         grid(sol.solution, xmax, ymax)
+    print("nb solutions:", len(sols) -1)
 
