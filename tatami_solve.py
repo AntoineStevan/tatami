@@ -1,70 +1,80 @@
 import sys
 import facile
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def tatami_solve(xmax: int, ymax: int):# -> list[facile.Solution]:
     n = xmax * ymax // 2
 
     # 1.
-    variables = facile.Array.variable((n, 4), 0, max(xmax, ymax))  # x, y, sx, sy
-    for i in range(n):
-        facile.constraint((variables[i,0] <= xmax) & (variables[i,1] <= ymax))
-        facile.constraint((variables[i,2] == 1) | (variables[i,2] == 2))
-        facile.constraint((variables[i,3] == 1) | (variables[i,3] == 2))
-        facile.constraint(variables[i,2] + variables[i,3] == 3)
+    x = [facile.variable(0, xmax-1) for _ in range(n)]
+    y = [facile.variable(0, ymax-1) for _ in range(n)]
+    d = [facile.variable(1, 2) for _ in range(n)]  # 1: vertical, 2: horizontal.
 
     # 2.
-    auxs = facile.Array.variable((n, 2), 0, max(xmax, ymax))
     auxs = np.empty(shape=(n,2), dtype=facile.core.Variable)
     for i in range(n):
-        auxs[i,0] = variables[i,0] + variables[i,2]
-        auxs[i,1] = variables[i,1] - variables[i,3]
+        auxs[i,0] = x[i] + d[i]
+        auxs[i,1] = y[i] + 3 - d[i]
 
     # 3.
     for i in range(n):
-        facile.constraint((auxs[i,0] >= 1) & (auxs[i,0] <= xmax))
-        facile.constraint((auxs[i,1] >= 0) & (auxs[i,1] < ymax))
+        facile.constraint(auxs[i,0] <= xmax)
+        facile.constraint(auxs[i,1] <= ymax)
 
     # 4.
+    for i in range(n-1):
+        for j in range(i+1, n):
+            left = x[j] >= auxs[i,0]
+            right= auxs[j,0] <= x[i]
+            below = auxs[j,1] <= y[i]
+            above = y[j] >= auxs[i,1]
+            facile.constraint(left | right | above | below)
+
+    # 5.
+    for i in range(n-1):
+        facile.constraint(x[i] <= x[i+1])
+        facile.constraint(
+                (x[i] != x[i+1]) |
+                (y[i] < y[i+1])
+                )
+
+    # 6.
     for i in range(n):
         for j in range(i+1, n):
             facile.constraint(
-                    (auxs[j,0] <= variables[i,0]) |
-                    (variables[j,0] >= auxs[i,0]) |
-                    (auxs[j,1] >= variables[i,1]) |
-                    (variables[j,1] <= auxs[i,1])
+                    (auxs[i,0] != x[j]) |
+                    (auxs[i,1] != y[j])
                     )
 
-    # 5.
-#    for i in range(n-1):
-#        facile.constraint((variables[i,0] < variables[i+1,0]) | (variables[i,1] < variables[i+1,1]))
+    solutions = facile.solve_all(x+y+d, backtrack=True)
+    print(type(solutions[0]))
+    return solutions
 
-    return facile.solve_all(variables, backtrack=True)
 
-def grid(sol, xmax, ymax):
+def pretty_grid(sol, xmax, ymax):
     if sol is None:
         return
-    n = xmax * ymax // 2
-    grid_ = np.empty(shape=(xmax, ymax), dtype=str)
-    for i in range(xmax):
-        for j in range(ymax):
-            grid_[i,j] = '.'
 
-    for i in range(n):
-        x, y, sx, sy = sol[4*i:4*(i+1)]
-        print(x, y, sx, sy, end=" - ")
-        if sx == 1:
-            grid_[y-1,x] = chr(i+97)
-            grid_[y-2,x] = chr(i+97)
-        else:
-            grid_[y-1,x] = chr(i+97)
-            grid_[y-1,x+1] = chr(i+97)
-    print()
+    n = len(sol) // 3
+    x = sol[:n]
+    y = sol[n : 2 * n]
+    xs = sol[2 * n :]
 
-    msg = '\n'.join([' '.join(line) for line in grid_])
-    print(msg)
-    print('-'*2*xmax)
+    fig, ax = plt.subplots()
+
+    for (xi, yi, xsi) in zip(x, y, xs):
+        ysi = 3 - xsi
+        ax.fill([xi, xi, xi + xsi, xi + xsi], [yi, yi + ysi, yi + ysi, yi])
+
+    ax.set_xlim((0, xmax))
+    ax.set_ylim((0, ymax))
+    ax.set_aspect(1)
+    ax.set_xticks(range(xmax + 1))
+    ax.set_yticks(range(ymax + 1))
+
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -76,6 +86,6 @@ if __name__ == "__main__":
 
     sols = tatami_solve(xmax, ymax)
     for sol in sols:
-        grid(sol.solution, xmax, ymax)
+        pretty_grid(sol.solution, xmax, ymax)
     print("nb solutions:", len(sols) -1)
 
