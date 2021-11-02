@@ -36,6 +36,10 @@ def tatami_solve(xmax: int, ymax: int):# -> list[facile.Solution]:
                     ((variables[i,0] != variables[j,0]) | (variables[i,1] != variables[j,1]))
                     )
 
+    # 5.
+    for i in range(n-1):
+        facile.constraint((variables[i,0] < variables[i+1,0]) | (variables[i,1] < variables[i+1,1]))
+
     return facile.solve_all(variables, backtrack=True)
 
 
