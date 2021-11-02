@@ -42,6 +42,33 @@ def tatami_solve(xmax: int, ymax: int):# -> list[facile.Solution]:
 
     return facile.solve_all(variables, backtrack=True)
 
+def grid(sol, xmax, ymax):
+    if sol is None:
+        return
+    n = xmax * ymax // 2
+    grid_ = np.empty(shape=(xmax, ymax), dtype=str)
+    for i in range(xmax):
+        for j in range(ymax):
+            grid_[i,j] = '.'
+    print(len(sol) / 4)
+
+    for i in range(n):
+        #print(i, end=", ")
+        x, y, sx, sy = sol[4*i:4*(i+1)]
+        #print(i, x, y, sx, sy)
+        if sx == 1:
+            grid_[y-1,x] = str(i)
+            grid_[y-2,x] = str(i)
+        else:
+            grid_[y-1,x] = str(i)
+            grid_[y-1,x+1] = str(i)
+#        print('\n'.join([' '.join(line) for line in grid_]))
+#        print("**")
+#    print()
+
+    print('\n'.join([' '.join(line) for line in grid_]))
+    print('-'*2*xmax)
+
 
 if __name__ == "__main__":
     if len(sys.argv[1:]) not in [0, 2]:
@@ -53,4 +80,5 @@ if __name__ == "__main__":
     sols = tatami_solve(xmax, ymax)
     for sol in sols:
         print(sol.solution)
+        grid(sol.solution, xmax, ymax)
 
