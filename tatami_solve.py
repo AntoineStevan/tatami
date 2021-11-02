@@ -7,23 +7,24 @@ import matplotlib.pyplot as plt
 def tatami_solve(xmax: int, ymax: int):# -> list[facile.Solution]:
     n = xmax * ymax // 2
 
-    # 1.
+    # 1. variables definition.
+    # origin is at in bottom left corner.
     x = [facile.variable(0, xmax-1) for _ in range(n)]
     y = [facile.variable(0, ymax-1) for _ in range(n)]
     d = [facile.variable(1, 2) for _ in range(n)]  # 1: vertical, 2: horizontal.
 
-    # 2.
+    # 2. auxiliary variables.
     auxs = np.empty(shape=(n,2), dtype=facile.core.Variable)
     for i in range(n):
         auxs[i,0] = x[i] + d[i]
         auxs[i,1] = y[i] + 3 - d[i]
 
-    # 3.
+    # 3. no tile outside the box.
     for i in range(n):
         facile.constraint(auxs[i,0] <= xmax)
         facile.constraint(auxs[i,1] <= ymax)
 
-    # 4.
+    # 4. no overlap.
     for i in range(n-1):
         for j in range(i+1, n):
             left = x[j] >= auxs[i,0]
@@ -32,7 +33,7 @@ def tatami_solve(xmax: int, ymax: int):# -> list[facile.Solution]:
             above = y[j] >= auxs[i,1]
             facile.constraint(left | right | above | below)
 
-    # 5.
+    # 5. lexicographic ordering.
     for i in range(n-1):
         facile.constraint(x[i] <= x[i+1])
         facile.constraint(
@@ -40,7 +41,7 @@ def tatami_solve(xmax: int, ymax: int):# -> list[facile.Solution]:
                 (y[i] < y[i+1])
                 )
 
-    # 6.
+    # 6. no 4 tiles at same corner.
     for i in range(n):
         for j in range(i+1, n):
             facile.constraint(
@@ -48,8 +49,10 @@ def tatami_solve(xmax: int, ymax: int):# -> list[facile.Solution]:
                     (auxs[i,1] != y[j])
                     )
 
+    # 7. first diagonal symmetry.
+
+
     solutions = facile.solve_all(x+y+d, backtrack=True)
-    print(type(solutions[0]))
     return solutions
 
 
