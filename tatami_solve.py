@@ -14,23 +14,24 @@ def tatami_solve(xmax: int, ymax: int):# -> list[facile.Solution]:
     d = [facile.variable(1, 2) for _ in range(n)]  # 1: vertical, 2: horizontal.
 
     # 2. auxiliary variables.
-    auxs = np.empty(shape=(n,2), dtype=facile.core.Variable)
+    tops = np.empty(shape=(n,), dtype=facile.core.Variable)
+    rights = np.empty(shape=(n,), dtype=facile.core.Variable)
     for i in range(n):
-        auxs[i,0] = x[i] + d[i]
-        auxs[i,1] = y[i] + 3 - d[i]
+        rights[i] = x[i] + d[i]
+        tops[i] = y[i] + 3 - d[i]
 
     # 3. no tile outside the box.
     for i in range(n):
-        facile.constraint(auxs[i,0] <= xmax)
-        facile.constraint(auxs[i,1] <= ymax)
+        facile.constraint(rights[i] <= xmax)
+        facile.constraint(tops[i] <= ymax)
 
     # 4. no overlap.
     for i in range(n-1):
         for j in range(i+1, n):
-            left = x[j] >= auxs[i,0]
-            right= auxs[j,0] <= x[i]
-            below = auxs[j,1] <= y[i]
-            above = y[j] >= auxs[i,1]
+            left = x[j] >= rights[i]
+            right= rights[j] <= x[i]
+            below = tops[j] <= y[i]
+            above = y[j] >= tops[i]
             facile.constraint(left | right | above | below)
 
     # 5. lexicographic ordering.
@@ -45,13 +46,18 @@ def tatami_solve(xmax: int, ymax: int):# -> list[facile.Solution]:
     for i in range(n):
         for j in range(i+1, n):
             facile.constraint(
-                    (auxs[i,0] != x[j]) |
-                    (auxs[i,1] != y[j])
+                    (rights[i] != x[j]) |
+                    (tops[i] != y[j])
                     )
 
     # 7. first diagonal symmetry.
     if xmax == ymax:
-        facile.constraint(d[0] == 1)
+        for i in range(n):
+            facile.constraint(
+                    (x[i] != 0) |
+                    (y[i] != 0) |
+                    ((x[i] == 0) & (y[i] == 0) & (d[i] == 1))
+                    )
 
 #    # 8. search goals to guide the resolution.
 #    gx = facile.Goal.forall(x, assign="assign")
