@@ -94,6 +94,7 @@ if __name__ == "__main__":
 
     sols = tatami_solve(xmax, ymax)
     print("nb solutions:", len(sols) -1)
+    print(sols[-1])
     for sol in sols:
         pretty_grid(sol.solution, xmax, ymax)
 
