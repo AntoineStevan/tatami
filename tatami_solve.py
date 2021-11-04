@@ -50,7 +50,8 @@ def tatami_solve(xmax: int, ymax: int):# -> list[facile.Solution]:
                     )
 
     # 7. first diagonal symmetry.
-    facile.constraint(d[0] == 1)
+    if xmax == ymax:
+        facile.constraint(d[0] == 1)
 
 #    # 8. search goals to guide the resolution.
 #    gx = facile.Goal.forall(x, assign="assign")
