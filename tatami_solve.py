@@ -50,10 +50,15 @@ def tatami_solve(xmax: int, ymax: int):# -> list[facile.Solution]:
                     )
 
     # 7. first diagonal symmetry.
+    facile.constraint(d[0] == 1)
 
+#    # 8. search goals to guide the resolution.
+#    gx = facile.Goal.forall(x, assign="assign")
+#    gy = facile.Goal.forall(y, assign="assign")
+#    gy = facile.Goal.forall(y, assign="assign")
+#    return facile.solve(gx & gy & gd)
 
-    solutions = facile.solve_all(x+y+d, backtrack=True)
-    return solutions
+    return facile.solve_all(x+y+d, backtrack=True)
 
 
 def pretty_grid(sol, xmax, ymax):
@@ -88,7 +93,7 @@ if __name__ == "__main__":
     xmax, ymax = (4, 3) if len(sys.argv[1:]) == 0 else map(int, sys.argv[1:])
 
     sols = tatami_solve(xmax, ymax)
+    print("nb solutions:", len(sols) -1)
     for sol in sols:
         pretty_grid(sol.solution, xmax, ymax)
-    print("nb solutions:", len(sols) -1)
 
